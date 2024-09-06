@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from PIL import Image
+import math
 def nearest(img,scale):
     '''
     该代码实现了最邻近插值算法，将图像放大到指定倍数
@@ -25,8 +26,8 @@ def double_linear(img,scale):
     主要是通过输入图像中相邻的像素值来推算缩放（放大）后的图像像素的值
     '''
     width,height,_=img.shape
-    new_width = width*scale
-    new_height = height*scale
+    new_width = int(width*scale)
+    new_height = int(height*scale)
     new_img = np.zeros((new_width,new_height,3)) #3 for RGB
     for k in range(3):
         for i in range(new_width):
@@ -40,4 +41,44 @@ def double_linear(img,scale):
                 value0 = (src_x_1 - src_x)*img[src_x_0,src_y_0,k] + (src_x - src_x_0)*img[src_x_1,src_y_0,k]
                 value1 =(src_x_1 - src_x)*img[src_x_0,src_y_1,k] + (src_x - src_x_0)*img[src_x_1,src_y_1,k]
                 new_img[i,j,k] = int((src_y_1 - src_y)*value0 + (src_y - src_y_0)*value1)
+    return Image.fromarray(np.uint8(new_img))
+
+def bicubic_weight(x, a=-0.5):
+    abs_x = abs(x)
+    if abs_x <= 1:
+        return (a + 2) * abs_x**3 - (a + 3) * abs_x**2 + 1
+    elif 1 < abs_x < 2:
+        return a * abs_x**3 - 5 * a * abs_x**2 + 8 * a * abs_x - 4 * a
+    else:
+        return 0
+
+
+def bicubic(img,scale):
+    '''
+    该函数实现了双三次插值算法，将图像放大到指定倍数
+    遍历周围16个像素值，通过双三次权重函数进行计算。
+    边界处理：通过 if x+ii>=0 and x+ii<width and y+jj>=0 and y+jj<height:判断是否越界。
+    使用np.clip()保证像素值在0-255之间。
+    '''
+    width,height,_=img.shape
+    new_width = int(width*scale)
+    new_height = int(height*scale)
+    new_img = np.zeros((new_width,new_height,3)) #3 for RGB
+    for k in range(3):
+        for i in range(new_width):
+            for j in range(new_height):
+                src_x = i/scale
+                src_y = j/scale
+                x = math.floor(src_x)
+                y = math.floor(src_y)
+                x = int(x)
+                y = int(y)
+                u = src_x - x
+                v = src_y - y
+                pix = 0
+                for ii in range(-1,3):
+                    for jj in range(-1,3):
+                        if x+ii>=0 and x+ii<width and y+jj>=0 and y+jj<height:
+                            pix += img[x+ii,y+jj,k]*bicubic_weight(ii - u,-0.5)*bicubic_weight(jj - v,-0.5)
+                new_img[i,j,k] = np.clip(pix,0,255)
     return Image.fromarray(np.uint8(new_img))
