@@ -138,3 +138,58 @@ def nearest(img, scale):
                 new_img[i, j, k] = img[round((i - 1) / scale), round((j - 1) / scale), k]
     # 将结果转换为Image对象并返回
     return Image.fromarray(np.uint8(new_img))
+
+
+def normalize(slice, bottom=99, down=1):
+    """  
+    对区域非零值进行标准化，并将值裁剪到指定范围。
+    
+    该函数的主要目的是对图像的非背景部分（非零值）进行标准化，
+    并通过裁剪掉顶部和底部的极端值来使数据集更加‘公平’。
+    
+    参数:
+    - slice: 待处理的图像数据。
+    - bottom: 底部百分位数，默认为99，用于确定裁剪的下限。
+    - down: 顶部百分位数，默认为1，用于确定裁剪的上限。
+    
+    返回:
+    - 标准化并裁剪后的图像数据。
+    """
+    # 确定裁剪的下限和上限
+    b = np.percentile(slice, bottom)
+    t = np.percentile(slice, down)
+    # 裁剪图像数据，去除极端值
+    slice = np.clip(slice, t, b)
+
+    # 提取非零值
+    image_nonzero = slice[np.nonzero(slice)]
+    # 如果标准差为0，则直接返回原slice
+    if np.std(slice) == 0 or np.std(image_nonzero) == 0:
+        return slice
+    else:
+        # 对非零值进行标准化
+        tmp = (slice - np.mean(image_nonzero)) / np.std(image_nonzero)
+        # 将标准化后的最小值设为-9，以区分背景
+        tmp[tmp == tmp.min()] = -9 
+        return tmp
+    
+def crop_center(img, croph, cropw):
+    """
+    从图片中心裁剪出指定大小的区域。
+
+    参数:
+    img: 待裁剪的图片，假设图片序列的形状为 (N, H, W)，其中 N 是图片数量，H 是高度，W 是宽度。
+    croph: 裁剪区域的高度。
+    cropw: 裁剪区域的宽度。
+
+    返回值:
+    裁剪后的图片序列，裁剪区域从每张图片的中心开始计算。
+    """
+    # 初始化图片的高度和宽度
+    height, width = img[0].shape
+    # 计算裁剪区域的起始高度
+    starth = height // 2 - (croph // 2)
+    # 计算裁剪区域的起始宽度
+    startw = width // 2 - (cropw // 2)
+    # 返回裁剪后的图片序列
+    return img[:, starth:starth + croph, startw:startw + cropw]
