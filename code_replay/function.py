@@ -2,22 +2,29 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 import math
-def nearest(img,scale):
+def nearest(img, scale):
     '''
     该代码实现了最邻近插值算法，将图像放大到指定倍数
     参数：
-    img:输入图像
-    scale:放大倍数
+    img: 输入图像
+    scale: 放大倍数
     最后使用Image.fromarray()函数将结果转换为Image对象并输出
     '''
-    width,height,_=img.shape
-    new_width = width*scale
-    new_height = height*scale
-    new_img = np.zeros((new_width,new_height,3)) #3 for RGB
+    # 获取原始图像的宽度和高度
+    width, height, _ = img.shape
+    # 计算新图像的宽度和高度
+    new_width = width * scale
+    new_height = height * scale
+    # 创建一个具有相同颜色通道数的新图像数组，初始值为零
+    new_img = np.zeros((new_width, new_height, 3))  # 3 for RGB
+    # 遍历每个颜色通道
     for k in range(3):
+        # 遍历新图像的每个像素
         for i in range(new_width):
             for j in range(new_height):
-                new_img[i,j,k] = img[round((i-1)/scale),round((j-1)/scale),k] #映射
+                # 将新图像的像素值映射到原始图像的最邻近像素值
+                new_img[i, j, k] = img[round((i - 1) / scale), round((j - 1) / scale), k]
+    # 将结果转换为Image对象并返回
     return Image.fromarray(np.uint8(new_img))
 
 def double_linear(img,scale):
@@ -81,4 +88,53 @@ def bicubic(img,scale):
                         if x+ii>=0 and x+ii<width and y+jj>=0 and y+jj<height:
                             pix += img[x+ii,y+jj,k]*bicubic_weight(ii - u,-0.5)*bicubic_weight(jj - v,-0.5)
                 new_img[i,j,k] = np.clip(pix,0,255)
+    return Image.fromarray(np.uint8(new_img))
+
+def nearest(img, scale):
+    '''
+    该代码实现了最邻近插值算法，将图像放大到指定倍数
+    参数：
+    img: 输入图像
+    scale: 放大倍数
+    最后使用Image.fromarray()函数将结果转换为Image对象并输出
+    '''
+    # 获取原始图像的宽度和高度
+    width, height, _ = img.shape
+    # 计算新图像的宽度和高度
+    new_width = width * scale
+    new_height = height * scale
+    # 创建一个具有相同颜色通道数的新图像数组，初始值为零
+    new_img = np.zeros((new_width, new_height, 3))  # 3 for RGB
+    # 遍历每个颜色通道
+    for k in range(3):
+        # 遍历新图像的每个像素
+        for i in range(new_width):
+            for j in range(new_height):
+                # 将新图像的像素值映射到原始图像的最邻近像素值
+                new_img[i, j, k] = img[round((i - 1) / scale), round((j - 1) / scale), k]
+    # 将结果转换为Image对象并返回
+    return Image.fromarray(np.uint8(new_img))
+def nearest(img, scale):
+    '''
+    该代码实现了最邻近插值算法，将图像放大到指定倍数
+    参数：
+    img: 输入图像
+    scale: 放大倍数
+    最后使用Image.fromarray()函数将结果转换为Image对象并输出
+    '''
+    # 获取原始图像的宽度和高度
+    width, height, _ = img.shape
+    # 计算新图像的宽度和高度
+    new_width = width * scale
+    new_height = height * scale
+    # 创建一个具有相同颜色通道数的新图像数组，初始值为零
+    new_img = np.zeros((new_width, new_height, 3))  # 3 for RGB
+    # 遍历每个颜色通道
+    for k in range(3):
+        # 遍历新图像的每个像素
+        for i in range(new_width):
+            for j in range(new_height):
+                # 将新图像的像素值映射到原始图像的最邻近像素值
+                new_img[i, j, k] = img[round((i - 1) / scale), round((j - 1) / scale), k]
+    # 将结果转换为Image对象并返回
     return Image.fromarray(np.uint8(new_img))
